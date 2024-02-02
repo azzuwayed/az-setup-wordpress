@@ -15,8 +15,7 @@ Clone the repository to a safe location, such as the home directory:
 
 Navigate to the cloned directory and execute the setup script:
 
-`cd az-setup-wordpress
-sudo ./wp-setup.sh` 
+`cd az-setup-wordpress && chmod +x ./wp-setup.sh && sudo ./wp-setup.sh` 
 
 ### Customizing WordPress Configuration
 
