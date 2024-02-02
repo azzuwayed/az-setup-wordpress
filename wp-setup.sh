@@ -1,62 +1,58 @@
 #!/bin/bash
 
-# This file must be placed above the public folder of WordPress
+# Ask for the WordPress installation path
+echo "Enter the path to your WordPress installation:"
+read -r wp_path
 
-# If you are root user, use this command to run the script within WordPress folder
-# cp ../wp-setup.sh . && sudo chown www:www wp-setup.sh && sudo chmod 755 wp-setup.sh && sudo -u www ./wp-setup.sh
+# Determine the path to the script's directory
+repo_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-# Check if WP-CLI is installed
-if ! command -v wp &> /dev/null
-then
-    echo "WP-CLI could not be found. Please install WP-CLI to use this script."
+# Check if the path is valid and change directory
+if [ -d "$wp_path" ]; then
+    cd "$wp_path"
+    echo "Changed directory to $wp_path"
+    
+    # Copy wp-init.sh and wp-config.sh from the repo to the WordPress directory
+    cp "${repo_path}/wp-init.sh" ./wp-init.sh
+    cp "${repo_path}/wp-config.sh" ./wp-config.sh
+
+    # Check the ownership of the WordPress directory
+    wp_owner=$(stat -c '%U' .)
+    wp_group=$(stat -c '%G' .)
+
+    # Ensure the scripts have the same ownership
+    sudo chown "$wp_owner:$wp_group" wp-init.sh wp-config.sh
+
+else
+    echo "Invalid path. Please make sure the path is correct and try again."
     exit 1
 fi
 
-# Delete specified plugins
-wp plugin delete akismet
-wp plugin delete hello
+echo "Do you want to initialize a new WordPress website? (y/n)"
+read -r init_choice
 
-# Install and activate "Hello Elementor" theme
-wp theme install hello-elementor --activate
+if [ "$init_choice" = "y" ]; then
+    chmod +x ./wp-init.sh
+    sudo -u "$wp_owner" ./wp-init.sh
+    echo "WordPress initialization completed."
+fi
 
-# Delete all themes except "Hello Elementor"
-for theme in $(wp theme list --field=name); do
-    if [ "$theme" != "hello-elementor" ]; then
-        wp theme delete "$theme"
-    fi
-done
+echo "Do you want to update wp-config settings? (y/n)"
+read -r config_choice
 
-# Delete 'Hello World!' post
-wp post delete 1 --force
+if [ "$config_choice" = "y" ]; then
+    chmod +x ./wp-config.sh
+    sudo -u "$wp_owner" ./wp-config.sh
+    echo "wp-config settings updated."
+fi
 
-# Delete 'Sample Page'
-wp post delete 2 --force
+echo "Do you want to install default plugins? (y/n)"
+read -r plugin_choice
 
-# Create a new page titled 'Home'
-home_page_id=$(wp post create --post_type=page --post_title='Home' --post_status=publish --porcelain)
+if [ "$plugin_choice" = "y" ]; then
+    chmod +x "${repo_path}/wp-plugins.sh"
+    sudo -u "$wp_owner" ./wp-plugins.sh "$wp_path" "$repo_path"
+    echo "Default plugins installation completed."
+fi
 
-# Set the 'Home' page as the front page
-wp option update show_on_front 'page'
-wp option update page_on_front "$home_page_id"
-
-# Update General Settings
-wp option update timezone_string "Asia/Riyadh"
-wp option update date_format "d/m/Y"
-wp option update time_format "g:i A"
-wp option update start_of_week 0  # 0 is Sunday
-
-# Update Discussion Settings
-wp option update default_pingback_flag 0
-wp option update default_ping_status 0
-
-# Update Media Settings
-wp option update uploads_use_yearmonth_folders 0
-
-# Update Permalink Settings
-wp rewrite structure '/%postname%/' --hard
-wp rewrite flush --hard
-
-# Remove this script
-rm -- "$0"
-
-echo "Setup complete"
+echo "Setup complete."
