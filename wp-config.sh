@@ -1,4 +1,5 @@
 #!/bin/bash
+# wp-config.sh
 
 # Ensure wp-config.php exists
 config_file="wp-config.php"
@@ -81,26 +82,9 @@ for group in "${settings_groups[@]}"; do
     action=$(ask_group_preference "$group")
     if [[ "$action" != "skip" ]]; then
         for setting in "${settings[$group]}"; do
-            echo "$action: $setting"
+            modify_config "$setting" "$action"
         done
     fi
-done
-
-echo "Are you sure you want to apply the above changes? (y/n)"
-read -r confirmation
-if [[ "$confirmation" != "y" && "$confirmation" != "Y" ]]; then
-    echo "Changes not applied. Exiting."
-    exit 1
-fi
-
-for group in "${settings_groups[@]}"; do
-    action=$(ask_group_preference "$group")
-    if [[ "$action" == "skip" ]]; then
-        continue
-    fi
-    for setting in "${settings[$group]}"; do
-        modify_config "$setting" "$action"
-    done
 done
 
 echo "Exiting wp-config.sh script..."

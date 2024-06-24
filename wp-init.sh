@@ -1,4 +1,5 @@
 #!/bin/bash
+# wp-init.sh
 
 echo_warning() {
     echo "WARNING: This script will heavily modify your WordPress site."
@@ -17,55 +18,26 @@ confirm_proceed() {
     done
 }
 
-check_wp_cli() {
-    if ! command -v wp &> /dev/null; then
-        echo "WP-CLI could not be found. Would you like to install it? (y/n)"
-        read -r install_choice
-        if [[ $install_choice == "y" || $install_choice == "Y" ]]; then
-            if command -v curl &> /dev/null; then
-                sudo curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-                chmod +x wp-cli.phar
-                sudo mv wp-cli.phar /usr/local/bin/wp
-                if [ $? -ne 0 ]; then
-                    echo "Failed to install wp-cli. Exiting."
-                    echo ""
-                    exit 1
-                fi
-                echo "WP-CLI installed successfully."
-            else
-                echo "Curl is not installed. Please install curl to proceed."
-                echo ""
-                exit 1
-            fi
-        else
-            echo "WP-CLI is required for this script to run."
-            echo ""
-            exit 1
-        fi
-    fi
-}
-
 echo_warning
 confirm_proceed
-check_wp_cli
 
 # Delete default plugins
-wp plugin delete akismet hello
+wp plugin delete akismet hello || { echo "Failed to delete default plugins"; exit 1; }
 
-# Install and activate "Hello Elementor" theme, delete other themes in a more efficient manner
-wp theme install hello-elementor --activate
+# Install and activate "Hello Elementor" theme
+wp theme install hello-elementor --activate || { echo "Failed to install and activate Hello Elementor"; exit 1; }
 wp theme list --field=name | grep -v 'hello-elementor' | xargs -I {} wp theme delete {}
 
 # Delete 'Hello World!' post
-wp post delete 1 --force
+wp post delete 1 --force || { echo "Failed to delete 'Hello World!' post"; exit 1; }
 
 # Delete 'Sample Page'
-wp post delete 2 --force
+wp post delete 2 --force || { echo "Failed to delete 'Sample Page'"; exit 1; }
 
 # Create and set 'Home' page as the front page
 home_page_id=$(wp post create --post_type=page --post_title='Home' --post_status=publish --porcelain)
-wp option update show_on_front 'page'
-wp option update page_on_front "$home_page_id"
+wp option update show_on_front 'page' || { echo "Failed to update show_on_front option"; exit 1; }
+wp option update page_on_front "$home_page_id" || { echo "Failed to update page_on_front option"; exit 1; }
 
 # Update site options 
 declare -A options=(
@@ -79,12 +51,12 @@ declare -A options=(
 )
 
 for option in "${!options[@]}"; do
-    wp option update "$option" "${options[$option]}"
+    wp option update "$option" "${options[$option]}" || { echo "Failed to update option $option"; exit 1; }
 done
 
 # Update Permalink Settings
-wp rewrite structure '/%postname%/' --hard
-wp rewrite flush --hard
+wp rewrite structure '/%postname%/' --hard || { echo "Failed to update permalink structure"; exit 1; }
+wp rewrite flush --hard || { echo "Failed to flush rewrite rules"; exit 1; }
 
 echo "Exiting wp-init.sh script..."
 echo ""

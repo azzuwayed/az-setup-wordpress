@@ -1,4 +1,5 @@
 #!/bin/bash
+# wp-plugins.sh
 
 # Accept WordPress path and repo path as parameters
 wp_path=$1

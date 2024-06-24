@@ -1,4 +1,34 @@
 #!/bin/bash
+# wp-setup.sh
+
+check_wp_cli() {
+    if ! command -v wp &> /dev/null; then
+        echo "WP-CLI could not be found. Would you like to install it? (y/n)"
+        read -r install_choice
+        if [[ $install_choice == "y" || $install_choice == "Y" ]]; then
+            if command -v curl &> /dev/null; then
+                sudo curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+                chmod +x wp-cli.phar
+                sudo mv wp-cli.phar /usr/local/bin/wp
+                if [ $? -ne 0 ]; then
+                    echo "Failed to install wp-cli. Exiting."
+                    echo ""
+                    exit 1
+                fi
+                echo "WP-CLI installed successfully."
+            else
+                echo "Curl is not installed. Please install curl to proceed."
+                echo ""
+                exit 1
+            fi
+        else
+            echo "WP-CLI is required for this script to run."
+            echo ""
+            exit 1
+        fi
+    fi
+}
+check_wp_cli
 
 # Ask for the WordPress installation path
 echo "Enter the path to your WordPress installation:"
@@ -10,7 +40,7 @@ repo_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Check if the path is valid and change directory
 if [ -d "$wp_path" ]; then
-    cd "$wp_path"
+    cd "$wp_path" || { echo "Failed to change directory to $wp_path"; exit 1; }
     echo "Changed directory to $wp_path"
     echo ""
     
