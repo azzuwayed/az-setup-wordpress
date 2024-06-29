@@ -4,7 +4,7 @@
 config_file="wp-config.php"
 if [ ! -f "$config_file" ]; then
     echo "Error: wp-config.php not found. Please run this script from a WordPress installation directory."
-    echo ""
+    echo -e "\n"
     exit 1
 fi
 
@@ -13,7 +13,7 @@ current_time=$(date +"%Y%m%d-%H%M%S")
 backup_file="wp-config-backup-$current_time.php"
 cp "$config_file" "$backup_file"
 echo "Backup of wp-config.php created as $backup_file"
-echo ""
+echo -e "\n"
 
 modify_config() {
     local setting="$1"
@@ -28,7 +28,7 @@ modify_config() {
     elif [[ "$action" == "remove" ]]; then
         sed -i "/$(echo "$setting" | cut -d"'" -f2)/d" "$config_file"
         echo "Removed: $setting"
-        echo ""
+        echo -e "\n"
     fi
 }
 
@@ -104,4 +104,4 @@ for group in "${settings_groups[@]}"; do
 done
 
 echo "Exiting wp-config.sh script..."
-echo ""
+echo -e "\n"

@@ -2,7 +2,7 @@
 
 # Ask for the WordPress installation path
 echo "Enter the path to your WordPress installation:"
-echo ""
+echo -e "\n"
 read -r wp_path
 
 # Determine the path to the script's directory
@@ -12,7 +12,7 @@ repo_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 if [ -d "$wp_path" ]; then
     cd "$wp_path"
     echo "Changed directory to $wp_path"
-    echo ""
+    echo -e "\n"
     
     # Copy wp-init.sh and wp-config.sh from the repo to the WordPress directory
     cp "${repo_path}/wp-init.sh" ./wp-init.sh
@@ -28,18 +28,8 @@ if [ -d "$wp_path" ]; then
 
 else
     echo "Invalid path. Please make sure the path is correct and try again."
-    echo ""
+    echo -e "\n"
     exit 1
-fi
-
-echo "Do you want to initialize a new WordPress website? (y/n)"
-read -r init_choice
-
-if [ "$init_choice" = "y" ]; then
-    chmod +x ./wp-init.sh
-    sudo -u "$wp_owner" ./wp-init.sh
-    echo "WordPress initialization completed."
-    echo ""
 fi
 
 echo "Do you want to update wp-config settings? (y/n)"
@@ -49,7 +39,18 @@ if [ "$config_choice" = "y" ]; then
     chmod +x ./wp-config.sh
     sudo -u "$wp_owner" ./wp-config.sh
     echo "wp-config settings updated."
-    echo ""
+    echo -e "\n"
+fi
+
+
+echo "Do you want to initialize a new WordPress website? (y/n)"
+read -r init_choice
+
+if [ "$init_choice" = "y" ]; then
+    chmod +x ./wp-init.sh
+    sudo -u "$wp_owner" ./wp-init.sh
+    echo "WordPress initialization completed."
+    echo -e "\n"
 fi
 
 echo "Do you want to install default plugins? (y/n)"
@@ -59,13 +60,13 @@ if [ "$plugin_choice" = "y" ]; then
     chmod +x ./wp-plugins.sh
     sudo -u "$wp_owner" ./wp-plugins.sh "$wp_path" "$repo_path"
     echo "Default plugins installation completed."
-    echo ""
+    echo -e "\n"
 fi
 
 echo "Cleaning up setup scripts..."
 rm -f ./wp-init.sh ./wp-config.sh ./wp-plugins.sh
 echo "Setup scripts removed from WordPress directory."
-echo ""
+echo -e "\n"
 
 echo "Setup complete."
-echo ""
+echo -e "\n"

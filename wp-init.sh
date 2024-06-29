@@ -28,18 +28,18 @@ check_wp_cli() {
                 sudo mv wp-cli.phar /usr/local/bin/wp
                 if [ $? -ne 0 ]; then
                     echo "Failed to install wp-cli. Exiting."
-                    echo ""
+                    echo -e "\n"
                     exit 1
                 fi
                 echo "WP-CLI installed successfully."
             else
                 echo "Curl is not installed. Please install curl to proceed."
-                echo ""
+                echo -e "\n"
                 exit 1
             fi
         else
-            echo "WP-CLI is required for this script to run."
-            echo ""
+            echo "WP-CLI is required for next scripts to run."
+            echo -e "\n"
             exit 1
         fi
     fi
@@ -82,9 +82,30 @@ for option in "${!options[@]}"; do
     wp option update "$option" "${options[$option]}"
 done
 
+# Ask user if they want to switch the website to HTTPS
+echo "Do you want to update the website to switch from HTTP to HTTPS? (y/n)"
+read -r https_choice
+
+if [[ "$https_choice" == "y" ]]; then
+    # Get the WordPress URL
+    wp_url=$(wp option get siteurl)
+    https_url=${wp_url/http:/https:}
+
+    # Perform search-replace operation
+    wp search-replace "$wp_url" "$https_url" --skip-columns=guid
+
+    # Update WordPress and Site URLs
+    wp option update home "$https_url"
+    wp option update siteurl "$https_url"
+
+    echo "Website has been updated to use HTTPS."
+    echo -e "\n"
+fi
+
 # Update Permalink Settings
 wp rewrite structure '/%postname%/' --hard
 wp rewrite flush --hard
 
 echo "Exiting wp-init.sh script..."
-echo ""
+echo -e "\n"
+
